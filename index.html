@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yemeksepeti Market - Temiz Görsel İndirmeli Vardiya Portalı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ys: {
+                            pink: '#D70F64',
+                            pinkHover: '#B80B53',
+                            pinkLight: '#FFF0F5',
+                            pinkAccent: '#FDE6ED',
+                            bg: '#F8FAFC',
+                            card: '#FFFFFF',
+                            text: '#0F172A',
+                            subtext: '#64748B',
+                            border: '#E2E8F0'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+        .ys-input { 
+            background-color: #FFFFFF; 
+            border: 1px solid #E2E8F0; 
+            border-radius: 10px; 
+            padding: 7px 12px; 
+            font-size: 12px; 
+            color: #0F172A; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .ys-input:focus { 
+            outline: none; 
+            border-color: #D70F64; 
+            box-shadow: 0 0 0 3px rgba(215, 15, 100, 0.12); 
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #CBD5E1;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-12 antialiased selection:bg-ys-pink selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-ys-pink font-extrabold text-2xl tracking-tight">yemeksepeti</span>
+                    <span class="bg-gradient-to-r from-ys-pink to-rose-600 text-white text-[10px] px-2.5 py-1 rounded-md font-black uppercase tracking-wider shadow-sm">market</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500 border-l border-slate-200 pl-4">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Haftalık Vardiya Yönetim Portalı</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div id="day-clipboard-indicator" class="hidden bg-purple-100 text-purple-900 border border-purple-300 px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm animate-pulse">
+                    <i class="fa-solid fa-copy text-purple-700"></i>
+                    <span>Kopyalanan Saat: <b id="copied-day-time-text" class="font-mono text-purple-950 font-black">09:00 - 16:00</b></span>
+                    <button onclick="clearDayClipboard()" class="bg-purple-200 hover:bg-purple-300 text-purple-900 w-5 h-5 rounded-full flex items-center justify-center ml-1 transition"><i class="fa-solid fa-xmark text-[10px]"></i></button>
+                </div>
+
+                <button onclick="openArchiveModal()" class="bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-amber-600/20">
+                    <i class="fa-solid fa-box-archive text-sm"></i>
+                    <span>Arşivi Gör</span>
+                </button>
+                <button onclick="saveCurrentShiftToArchive()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-emerald-600/20">
+                    <i class="fa-solid fa-floppy-disk text-sm"></i>
+                    <span>Arşive Kaydet</span>
+                </button>
+                <button onclick="downloadMatrixAsImage()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-indigo-600/20">
+                    <i class="fa-solid fa-file-image text-sm"></i>
+                    <span>Görsel İndir</span>
+                </button>
+                <button onclick="downloadCSV()" class="bg-gradient-to-r from-ys-pink to-rose-600 hover:from-ys-pinkHover hover:to-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-ys-pink/20">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Yükleme Dosyası İndir</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-6 flex-1 w-full space-y-6">
+
+        <!-- Top Control Bar -->
+        <div class="bg-white border border-slate-200 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-xl">
+                    <i class="fa-solid fa-file-image"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-extrabold text-slate-900 tracking-tight">
+                        Temiz Görsel İndirmeli Vardiya Portalı
+                    </h1>
+                    <p class="text-xs text-slate-400 font-medium">Görsel indirildiğinde üstteki açıklama ve butonlar hariç doğrudan sarı başlıklı tablo kırpılır.</p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto bg-slate-50 p-2 rounded-xl border border-slate-200">
+                <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                    <label class="text-xs font-bold text-slate-700 whitespace-nowrap">
+                        <i class="fa-solid fa-calendar-day text-ys-pink"></i> Başlangıç Tarihi (Pazartesi):
+                    </label>
+                    <input type="date" id="weekly-start-date" value="2026-10-05" onchange="renderMatrix()" class="ys-input font-bold text-xs shadow-sm">
+                </div>
+
+                <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                    <label class="text-xs font-bold text-slate-700 whitespace-nowrap">
+                        <i class="fa-solid fa-shop text-ys-pink"></i> Aktif Mağaza:
+                    </label>
+                    <select id="store-select" onchange="handleStoreChange(this.value)" class="ys-input font-bold text-xs text-slate-800 border-slate-300 bg-white max-w-[280px] truncate shadow-sm">
+                        <option value="37" selected>Yemeksepeti Market, Balçova (Nokta ID: 37)</option>
+                        <option value="55">Yemeksepeti Market, Buca (Nokta ID: 55)</option>
+                        <option value="67">Yemeksepeti Market, Çiğli (Nokta ID: 67)</option>
+                        <option value="CUSTOM">-- Özel / Manuel Mağaza ID Gir --</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-1.5 border-l border-slate-200 pl-3">
+                    <span class="text-xs font-bold text-slate-600">Nokta ID:</span>
+                    <input type="text" id="global-point-id" value="37" oninput="updateGlobalPointId(this.value)" placeholder="ID" class="ys-input w-16 text-center font-bold text-ys-pink text-xs bg-ys-pinkLight/40 border-ys-pink/40 shadow-sm">
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            
+            <!-- LEFT 3 COLUMNS: VISUAL MATRIX -->
+            <div class="lg:col-span-3 space-y-6">
+                
+                <div class="bg-white border-2 border-slate-300 rounded-2xl shadow-sm overflow-hidden p-1">
+                    
+                    <div class="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4 bg-white">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-ys-pink/10 text-ys-pink flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-table-cells text-base"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-sm font-extrabold text-slate-900 tracking-tight">Haftalık Görsel Vardiya & İzin Çizelgesi</h2>
+                                <p class="text-[11px] text-slate-400 font-medium">Kutuların üzerine basarak günü değiştirebilir veya 📋 simgesiyle saati kopyalayabilirsiniz</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button id="clear-all-btn" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                <i class="fa-regular fa-trash-can"></i>
+                                <span>Tüm Vardiyaları Temizle</span>
+                            </button>
+
+                            <div class="flex flex-wrap items-center gap-1.5 text-[11px] font-bold border-l border-slate-200 pl-3">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-sky-500 text-white"><i class="fa-solid fa-sun text-[9px]"></i> Sabah</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-amber-500 text-white"><i class="fa-solid fa-cloud-sun text-[9px]"></i> Öğlen</span>
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-700 text-white"><i class="fa-solid fa-moon text-[9px]"></i> Gece</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EXCEL TABLE WRAPPER FOR IMAGE CAPTURE -->
+                    <div id="matrix-card-container" class="overflow-x-auto p-3 bg-white">
+                        <table class="w-full text-center text-xs border-collapse excel-table font-sans">
+                            <thead>
+                                <!-- EXCEL YELLOW HEADER -->
+                                <tr class="bg-[#FACC15] text-slate-950 font-black text-xs uppercase tracking-wider h-11 border-b-2 border-slate-400">
+                                    <th class="p-2 text-left w-56 bg-[#FACC15] border-r-2 border-slate-400">
+                                        <div class="text-slate-950 text-xs font-black uppercase">MAĞAZA EKİBİ</div>
+                                        <div class="text-[10px] font-semibold text-slate-700 normal-case mt-0.5">Müdür, Yrd. & Görevli Özeti</div>
+                                    </th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-0">PAZARTESİ</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-1">SALI</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-2">ÇARŞAMBA</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-3">PERŞEMBE</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-4">CUMA</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-5">CUMARTESİ</th>
+                                    <th class="p-2 border border-slate-300 w-28" id="th-date-6">PAZAR</th>
+                                    <th class="p-2 bg-[#FACC15] border border-slate-400 w-32 text-center">HAFTALIK İMZA</th>
+                                </tr>
+                                <tr id="matrix-counts-header" class="bg-amber-50 text-[11px] font-bold border border-slate-300">
+                                    <!-- Dynamic counts per day -->
+                                </tr>
+                            </thead>
+                            <tbody id="matrix-table-body" class="divide-y divide-slate-300 font-sans">
+                                <!-- Dynamic Visual Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT 1 COLUMN: EMPLOYEE DIRECTORY -->
+            <div class="lg:col-span-1 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm space-y-3.5 sticky top-20">
+                <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-ys-pink"></i> Çalışan Rehberi
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5" id="store-guide-subtext">Balçova Mağazası Ekibi</p>
+                    </div>
+                    <span id="employee-count-badge" class="bg-ys-pinkLight text-ys-pink text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-ys-pink/20">12 Kişi</span>
+                </div>
+
+                <div class="space-y-2">
+                    <button onclick="toggleAddEmpForm()" class="w-full bg-ys-pinkLight/60 hover:bg-ys-pinkLight text-ys-pink border border-ys-pink/30 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>+ Yeni Çalışan / Müdür Ekle</span>
+                    </button>
+
+                    <div id="add-emp-form" class="hidden bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5 shadow-inner">
+                        <input type="text" id="new-emp-name" placeholder="Ad Soyad (Örn: AHMET YILMAZ)" class="ys-input w-full text-xs font-bold uppercase">
+                        <input type="text" id="new-emp-id" placeholder="Personel ID (Örn: 9812)" class="ys-input w-full text-xs font-mono font-bold">
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-600 block">Unvan / Rol Seçin:</label>
+                            <select id="new-emp-role" class="ys-input w-full text-xs font-bold bg-white border-slate-300">
+                                <option value="MANAGER">👔 Mağaza Müdürü</option>
+                                <option value="ASSISTANT_MANAGER">🥈 Mağaza Müdür Yardımcısı</option>
+                                <option value="ASSOCIATE" selected>🛒 Mağaza Görevlisi</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <button onclick="addNewEmployee()" class="flex-1 bg-ys-pink hover:bg-ys-pinkHover text-white py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                                Kaydet
+                            </button>
+                            <button onclick="toggleAddEmpForm()" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold transition hover:bg-slate-100">
+                                İptal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input type="text" id="employee-search" placeholder="İsim veya ID Ara..." oninput="filterEmployees(this.value)" class="ys-input pl-8 w-full text-xs">
+                </div>
+
+                <div id="employee-list-container" class="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+                    <!-- Dynamic Employee Cards -->
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL: EDIT EMPLOYEE ROLE / POSITION -->
+    <div id="edit-emp-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-sm w-full p-6 space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen text-ys-pink text-lg"></i>
+                    <h3 class="text-sm font-extrabold text-slate-900" id="edit-emp-title">Pozisyon Düzenle</h3>
+                </div>
+                <button onclick="closeEditEmpModal()" class="w-7 h-7 rounded-full bg-slate-100 text-slate-500 hover:text-ys-pink"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Ad Soyad:</label>
+                    <input type="text" id="edit-emp-name-input" class="ys-input w-full font-bold uppercase">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-700 block mb-1">Personel Pozisyonu / Unvanı:</label>
+                    <select id="edit-emp-role-select" class="ys-input w-full font-bold bg-white border-slate-300">
+                        <option value="MANAGER">👔 Mağaza Müdürü</option>
+                        <option value="ASSISTANT_MANAGER">🥈 Mağaza Müdür Yardımcısı</option>
+                        <option value="ASSOCIATE">🛒 Mağaza Görevlisi</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 border-t pt-3">
+                <button onclick="closeEditEmpModal()" class="px-4 py-2 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">İptal</button>
+                <button onclick="saveEmployeeRole()" class="px-5 py-2 bg-ys-pink hover:bg-ys-pinkHover text-white text-xs font-bold rounded-xl shadow-md shadow-ys-pink/20">Kaydet & Güncelle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Archive List & EXCEL Style Inspection Modal -->
+    <div id="archive-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-5xl w-full overflow-hidden space-y-4 p-6 transform transition-all">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-box-archive"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Arşivlenmiş Haftalık Vardiyalar</h3>
+                        <p class="text-xs text-slate-400">Canlı çizelgeyi bozmadan geçmiş haftaların vardiyalarını Excel tablosu olarak inceleyin.</p>
+                    </div>
+                </div>
+                <button onclick="closeArchiveModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-ys-pink hover:bg-ys-pinkLight flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="archive-list-container" class="space-y-2.5 max-h-[200px] overflow-y-auto pr-1">
+                <!-- Dynamic Archive Items -->
+            </div>
+
+            <!-- EXCEL STYLE ARCHIVE INSPECT BOX -->
+            <div id="archive-inspect-box" class="hidden bg-slate-50 rounded-2xl p-4 space-y-3 max-h-[460px] overflow-y-auto border-2 border-slate-400 shadow-xl">
+                <div class="flex items-center justify-between border-b border-slate-300 pb-2">
+                    <span class="font-extrabold text-slate-900 text-xs flex items-center gap-2" id="inspect-archive-title">
+                        <i class="fa-solid fa-file-excel text-amber-600"></i> Arşiv Detayları
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="downloadArchiveAsImage()" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-lg transition shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> Görseli İndir (PNG)
+                        </button>
+                        <button onclick="closeArchiveInspect()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-2.5 py-1 rounded-lg transition">
+                            <i class="fa-solid fa-xmark"></i> Kapat
+                        </button>
+                    </div>
+                </div>
+                <div id="inspect-archive-table-wrapper" class="overflow-x-auto p-1 bg-white rounded border border-slate-300">
+                    <table class="w-full text-center text-xs border-collapse excel-table font-sans">
+                        <thead>
+                            <tr class="bg-[#FACC15] text-slate-950 font-black text-xs uppercase tracking-wider h-9">
+                                <th class="p-2 text-left w-52 bg-[#FACC15] border-r-2 border-slate-500">ADI SOYADI</th>
+                                <th class="p-1 border border-slate-400">PZT</th>
+                                <th class="p-1 border border-slate-400">SALI</th>
+                                <th class="p-1 border border-slate-400">ÇAR</th>
+                                <th class="p-1 border border-slate-400">PER</th>
+                                <th class="p-1 border border-slate-400">CUMA</th>
+                                <th class="p-1 border border-slate-400">CMT</th>
+                                <th class="p-1 border border-slate-400">PAZ</th>
+                                <th class="p-1 bg-[#FACC15] border border-slate-400 w-28">HAFTALIK İMZA</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inspect-archive-table-body" class="divide-y divide-slate-300 font-sans">
+                            <!-- Dynamic Excel Inspect Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end border-t border-slate-100 pt-3">
+                <button onclick="closeArchiveModal()" class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition">
+                    Kapat
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal 1: Single Day Quick Shift Edit Modal -->
+    <div id="single-day-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden space-y-4 p-6 transform transition-all">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-ys-pinkLight text-ys-pink flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-calendar-day"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900" id="single-modal-employee-name">Çalışan İsmi</h3>
+                        <p class="text-xs text-ys-pink font-semibold font-mono" id="single-modal-day-info">Pazartesi - 2026-10-05</p>
+                    </div>
+                </div>
+                <button onclick="closeSingleDayModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-ys-pink hover:bg-ys-pinkLight flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between gap-2">
+                    <label class="text-xs font-bold text-slate-700">Durum / İzin Tipi:</label>
+                    <select id="single-leave-select" onchange="toggleSingleLeaveType(this.value)" class="ys-input font-bold text-xs bg-white text-slate-800 border-slate-300 shadow-sm w-60">
+                        <!-- Options generated dynamically -->
+                    </select>
+                </div>
+
+                <div id="single-custom-time-container" class="flex items-center justify-between border-t border-slate-200 pt-3">
+                    <label class="text-xs font-bold text-slate-700">Vardiya Saatleri:</label>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="single-start-time" value="09:00" class="ys-input w-24 text-center font-bold text-xs shadow-sm">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="time" id="single-end-time" value="17:00" class="ys-input w-24 text-center font-bold text-xs shadow-sm">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                <button onclick="pasteToSingleDayFromModal()" id="single-modal-paste-btn" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 hidden">
+                    <i class="fa-solid fa-paste"></i>
+                    <span>Kopyalanan Saati Yapıştır</span>
+                </button>
+
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="closeSingleDayModal()" class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+                        İptal
+                    </button>
+                    <button onclick="saveSingleDayShift()" class="px-5 py-2 rounded-xl bg-ys-pink hover:bg-ys-pinkHover text-white text-xs font-bold shadow-md shadow-ys-pink/20 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Günü Güncelle</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal 2: 7-Day Full Weekly Assignment Modal -->
+    <div id="weekly-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 transition-all">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-3xl w-full overflow-hidden space-y-4 p-6 sm:p-7 transform transition-all">
+            
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-ys-pinkLight text-ys-pink flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base font-bold text-slate-900" id="modal-employee-name">Çalışan İsmi</h3>
+                            <span id="modal-employee-role-badge" class="px-2 py-0.5 rounded-md text-[10px] font-black uppercase">Rol</span>
+                        </div>
+                        <p class="text-xs text-ys-pink font-semibold font-mono" id="modal-employee-id">ID: 00000</p>
+                    </div>
+                </div>
+                <button onclick="closeWeeklyModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-ys-pink hover:bg-ys-pinkLight flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+                    <label class="text-xs font-bold text-slate-700 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-days text-ys-pink"></i> Haftanın Başlangıç Tarihi (Pazartesi):
+                    </label>
+                    <input type="date" id="weekly-start-date" value="2026-10-05" onchange="updateModalDates()" class="ys-input font-bold text-xs shadow-sm">
+                </div>
+
+                <div class="bg-gradient-to-r from-ys-pinkLight/60 via-rose-50 to-amber-50 p-3 rounded-2xl border border-ys-pink/20 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs font-extrabold text-ys-pink">
+                        <i class="fa-solid fa-bolt text-sm"></i>
+                        <span>Tüm Haftaya Toplu Vardiya Uygula:</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="time" id="bulk-start-time" value="00:00" class="ys-input w-24 text-center font-bold text-xs shadow-sm">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="time" id="bulk-end-time" value="00:00" class="ys-input w-24 text-center font-bold text-xs shadow-sm">
+                        <button onclick="applyBulkTimeToAllDays()" class="bg-ys-pink hover:bg-ys-pinkHover text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Tüm Günlere Uygula</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-2 max-h-[360px] overflow-y-auto pr-1" id="days-container">
+                <!-- 7 Days Input Rows -->
+            </div>
+
+            <div class="flex items-center justify-between border-t border-slate-100 pt-4">
+                <button onclick="clearSingleEmployeeShiftsFromModal()" class="px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold text-rose-600 transition flex items-center gap-1.5">
+                    <i class="fa-regular fa-trash-can"></i>
+                    <span>Bu Kişinin Tüm Vardiyasını Sil</span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="closeWeeklyModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+                        İptal
+                    </button>
+                    <button onclick="submitWeeklyShifts()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-ys-pink to-rose-600 hover:from-ys-pinkHover hover:to-rose-700 text-white text-xs font-bold shadow-md shadow-ys-pink/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>7 Günlük Vardiyayı Tabloya Ekle</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const defaultEmployeesDB = {
+            '37': [
+                { id: '9703',  name: 'ARDA UZAL', role: 'MANAGER' },
+                { id: '7461',  name: 'OSMAN AYDIN', role: 'ASSISTANT_MANAGER' },
+                { id: '15678', name: 'OGUZ ÇAGRI AK', role: 'ASSOCIATE' },
+                { id: '34529', name: 'GÖKHAN CALIK', role: 'ASSOCIATE' },
+                { id: '32352', name: 'BURCU MEŞE', role: 'ASSOCIATE' },
+                { id: '30378', name: 'MAHMUT AYDEMİR', role: 'ASSOCIATE' },
+                { id: '28412', name: 'MEHMET YİĞİT ARSLAN', role: 'ASSOCIATE' },
+                { id: '38804', name: 'FATİH ALPEREN ALKAN', role: 'ASSOCIATE' },
+                { id: '39254', name: 'ERKAN KÜTÜK', role: 'ASSOCIATE' },
+                { id: '43194', name: 'KEZİBAN YENİKALE', role: 'ASSOCIATE' },
+                { id: '44451', name: 'AHMED TAHA SARAÇ', role: 'ASSOCIATE' },
+                { id: '46009', name: 'SABRİ DENİZ GÜLCAN', role: 'ASSOCIATE' }
+            ],
+            '55': [], '67': []
+        };
+
+        function loadFromStorage(key, fallback) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : fallback;
+            } catch (e) {
+                return fallback;
+            }
+        }
+
+        function saveToStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        let storeEmployeesDB = loadFromStorage('ys_storeEmployeesDB', defaultEmployeesDB);
+        let shifts = loadFromStorage('ys_shifts', []);
+        let currentGlobalPointId = loadFromStorage('ys_currentGlobalPointId', '37');
+        let shiftArchives = loadFromStorage('ys_shiftArchives', []);
+        
+        let copiedSingleDayShift = null;
+
+        let selectedEmpForModal = null;
+        let editingEmployeeContext = null;
+        let activeSingleDayContext = null;
+        let editingEmployeeRoleContext = null;
+
+        const matrixTableBody = document.getElementById('matrix-table-body');
+        const matrixCountsHeader = document.getElementById('matrix-counts-header');
+        const employeeListContainer = document.getElementById('employee-list-container');
+        const employeeCountBadge = document.getElementById('employee-count-badge');
+
+        const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+        const leaveTypesList = [
+            { code: 'WORK', label: 'Vardiya / Çalışma' },
+            { code: 'OFF', label: 'OFF / İzinli Gün' },
+            { code: 'OFIS_DESTEK', label: 'OFİS / DESTEK (Saat Girişi Zorunlu)' },
+            { code: 'YILLIK_IZIN', label: 'YILLIK İZİN' },
+            { code: 'RAPOR', label: 'RAPOR' },
+            { code: 'UCRETSIZ_IZIN', label: 'ÜCRETSİZ İZİN' },
+            { code: 'REGL_IZNI', label: 'REGL İZNİ' },
+            { code: 'DOGUM_IZNI', label: 'DOĞUM İZNİ' },
+            { code: 'BABALIK_IZNI', label: 'BABALIK İZNİ' }
+        ];
+
+        function copySingleDayFromCell(startTime, endTime, leaveType, e) {
+            if (e) e.stopPropagation();
+            copiedSingleDayShift = { startTime, endTime, leaveType };
+            
+            document.getElementById('day-clipboard-indicator').classList.remove('hidden');
+            document.getElementById('copied-day-time-text').textContent = (leaveType === 'WORK' || leaveType === 'OFIS_DESTEK') ? `${startTime} - ${endTime}` : leaveType;
+            
+            renderMatrix();
+        }
+
+        function pasteSingleDayToCell(empId, targetDate, e) {
+            if (e) e.stopPropagation();
+            if (!copiedSingleDayShift) return;
+
+            shifts = shifts.filter(s => !(s.employee_id === empId && s.start_date === targetDate));
+
+            if (copiedSingleDayShift.leaveType !== 'OFF') {
+                let endDateFormatted = calculateEndDate(targetDate, copiedSingleDayShift.startTime, copiedSingleDayShift.endTime);
+
+                shifts.push({
+                    shift_id: '',
+                    adjustment_type: 'CREATE',
+                    employee_id: empId,
+                    starting_point_id: currentGlobalPointId,
+                    start_date: targetDate,
+                    end_date: endDateFormatted,
+                    start_time: copiedSingleDayShift.startTime,
+                    end_time: copiedSingleDayShift.endTime,
+                    leave_type: copiedSingleDayShift.leaveType
+                });
+            }
+
+            saveToStorage('ys_shifts', shifts);
+            renderMatrix();
+            renderEmployeeSidebar();
+        }
+
+        function clearDayClipboard() {
+            copiedSingleDayShift = null;
+            document.getElementById('day-clipboard-indicator').classList.add('hidden');
+            renderMatrix();
+        }
+
+        function saveCurrentShiftToArchive() {
+            if (shifts.length === 0) {
+                alert("Henüz kaydedilecek bir vardiya girilmedi.");
+                return;
+            }
+
+            const startDateInput = document.getElementById('weekly-start-date');
+            const startDateStr = startDateInput ? startDateInput.value : '2026-10-05';
+            
+            let baseDate = new Date(startDateStr);
+            let endDate = new Date(baseDate);
+            endDate.setDate(baseDate.getDate() + 6);
+
+            const formatDateStr = (d) => {
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}.${month}.${year}`;
+            };
+
+            const defaultArchiveName = `Haftalık Vardiya (${formatDateStr(baseDate)} - ${formatDateStr(endDate)})`;
+
+            const archiveName = prompt("Lütfen bu vardiya planına bir isim/tarih etiketi verin:", defaultArchiveName);
+            if (!archiveName) return;
+
+            const newArchiveItem = {
+                id: Date.now(),
+                name: archiveName,
+                date: new Date().toLocaleString('tr-TR'),
+                pointId: currentGlobalPointId,
+                shiftsData: JSON.parse(JSON.stringify(shifts))
+            };
+
+            shiftArchives.unshift(newArchiveItem);
+            saveToStorage('ys_shiftArchives', shiftArchives);
+            alert("Vardiya planı başarıyla arşive kaydedildi!");
+        }
+
+        function openArchiveModal() {
+            closeArchiveInspect();
+            renderArchiveList();
+            document.getElementById('archive-modal').classList.remove('hidden');
+        }
+
+        function closeArchiveModal() {
+            document.getElementById('archive-modal').classList.add('hidden');
+        }
+
+        function inspectArchive(archiveId) {
+            const item = shiftArchives.find(a => a.id === archiveId);
+            if (!item) return;
+
+            const box = document.getElementById('archive-inspect-box');
+            const title = document.getElementById('inspect-archive-title');
+            const tbody = document.getElementById('inspect-archive-table-body');
+
+            title.innerHTML = `<i class="fa-solid fa-file-excel text-amber-600"></i> "${item.name}" - Simgeli Vardiya İnceleme Modu`;
+            
+            const allEmps = getCurrentStoreEmployees();
+            let html = '';
+
+            const shiftDates = Array.from(new Set(item.shiftsData.map(s => s.start_date))).sort();
+            let weekDates = shiftDates.slice(0, 7);
+
+            allEmps.forEach((emp, empIdx) => {
+                const empShifts = item.shiftsData.filter(s => s.employee_id === emp.id);
+                let daysHtml = '';
+
+                for (let i = 0; i < 7; i++) {
+                    const targetDate = weekDates[i];
+                    let cellShift = targetDate ? empShifts.find(s => s.start_date === targetDate) : null;
+
+                    if (cellShift) {
+                        const lType = cellShift.leave_type || 'WORK';
+                        daysHtml += `<td class="p-0 border border-slate-300 align-middle">
+                            ${getIconicCellBadge(emp.id, targetDate, cellShift.start_time, cellShift.end_time, lType)}
+                        </td>`;
+                    } else {
+                        daysHtml += `<td class="p-0 border border-slate-300 align-middle">
+                            ${getIconicCellBadge(emp.id, targetDate, '', '', 'OFF')}
+                        </td>`;
+                    }
+                }
+
+                html += `
+                    <tr class="h-10 border-b border-slate-300">
+                        <td class="p-2 text-left bg-white font-extrabold text-slate-900 border-r-2 border-slate-400 uppercase text-xs">
+                            ${emp.name}
+                        </td>
+                        ${daysHtml}
+                        <td class="p-1 border border-slate-300 bg-white align-middle text-center font-mono text-[10px] text-slate-300 font-bold">
+                            ...................
+                        </td>
+                    </tr>
+                `;
+            });
+
+            if (!html) html = '<tr><td colspan="9" class="p-4 text-center text-slate-400">Bu arşiv kaydında gösterilecek veri yok.</td></tr>';
+
+            tbody.innerHTML = html;
+            box.classList.remove('hidden');
+        }
+
+        function downloadArchiveAsImage() {
+            const container = document.getElementById('inspect-archive-table-wrapper');
+            html2canvas(container, { scale: 3, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Arsiv_Vardiya_Cizelgesi.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            });
+        }
+
+        function closeArchiveInspect() {
+            document.getElementById('archive-inspect-box').classList.add('hidden');
+        }
+
+        function renderArchiveList() {
+            const container = document.getElementById('archive-list-container');
+            container.innerHTML = '';
+
+            if (shiftArchives.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-2xl">
+                        <i class="fa-solid fa-box-open text-3xl text-slate-300 mb-2 block"></i>
+                        Henüz arşive kaydedilmiş haftalık vardiya bulunmuyor.
+                    </div>
+                `;
+                return;
+            }
+
+            shiftArchives.forEach(item => {
+                const row = document.createElement('div');
+                row.className = "p-3.5 bg-slate-50 rounded-2xl border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs hover:border-amber-400/60 transition";
+                row.innerHTML = `
+                    <div>
+                        <div class="font-extrabold text-slate-900">${item.name}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">Kayıt: ${item.date} | Toplam: ${item.shiftsData.length} Vardiya Kaydı</div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="inspectArchive(${item.id})" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-[11px] shadow-sm transition flex items-center gap-1">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>İncele</span>
+                        </button>
+                        <button onclick="restoreArchive(${item.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-[11px] shadow-sm transition flex items-center gap-1">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>Çizelgeye Yükle</span>
+                        </button>
+                        <button onclick="deleteArchive(${item.id})" class="w-7 h-7 rounded-xl text-rose-500 hover:bg-rose-100 flex items-center justify-center transition">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function restoreArchive(archiveId) {
+            const item = shiftArchives.find(a => a.id === archiveId);
+            if (!item) return;
+
+            if (confirm(`"${item.name}" arşivini canlı çizelgeye yüklemek istediğinize emin misiniz?`)) {
+                shifts = JSON.parse(JSON.stringify(item.shiftsData));
+                saveToStorage('ys_shifts', shifts);
+                renderEmployeeSidebar();
+                renderMatrix();
+                closeArchiveModal();
+            }
+        }
+
+        function deleteArchive(archiveId) {
+            if (confirm("Bu arşiv kaydını silmek istediğinize emin misiniz?")) {
+                shiftArchives = shiftArchives.filter(a => a.id !== archiveId);
+                saveToStorage('ys_shiftArchives', shiftArchives);
+                renderArchiveList();
+            }
+        }
+
+        function calculateShiftStats(startTime, endTime, type = 'WORK') {
+            if (!startTime || !endTime || startTime === 'OFF' || endTime === 'OFF' || (type !== 'WORK' && type !== 'OFIS_DESTEK')) {
+                return { totalHours: 0, netWorkHours: 0, otHours: 0, breakMins: 0 };
+            }
+            
+            const [sh, sm] = startTime.split(':').map(Number);
+            const [eh, em] = endTime.split(':').map(Number);
+
+            let startMins = sh * 60 + sm;
+            let endMins = eh * 60 + em;
+
+            if (endMins <= startMins) {
+                endMins += 24 * 60;
+            }
+
+            const totalHours = (endMins - startMins) / 60;
+            let breakMins = totalHours >= 6 ? 30 : 0;
+            let netWorkHours = totalHours - (breakMins / 60);
+            let otHours = netWorkHours > 7.5 ? (netWorkHours - 7.5) : 0;
+
+            return { totalHours, netWorkHours, otHours, breakMins };
+        }
+
+        function handleStoreChange(val) {
+            const input = document.getElementById('global-point-id');
+            
+            if (val !== 'CUSTOM') {
+                input.value = val;
+                updateGlobalPointId(val);
+                document.getElementById('store-guide-subtext').textContent = `Balçova Ekibi`;
+            } else {
+                input.focus();
+                document.getElementById('store-guide-subtext').textContent = `Özel Mağaza Ekibi`;
+            }
+        }
+
+        function updateGlobalPointId(val) {
+            currentGlobalPointId = val.trim();
+            saveToStorage('ys_currentGlobalPointId', currentGlobalPointId);
+            
+            if (!storeEmployeesDB[currentGlobalPointId]) {
+                storeEmployeesDB[currentGlobalPointId] = [];
+            }
+
+            shifts.forEach(s => {
+                s.starting_point_id = currentGlobalPointId;
+            });
+            saveToStorage('ys_shifts', shifts);
+
+            renderEmployeeSidebar();
+            renderMatrix();
+        }
+
+        function getCurrentStoreEmployees() {
+            let list = storeEmployeesDB[currentGlobalPointId] || [];
+            const roleOrder = { 'MANAGER': 1, 'ASSISTANT_MANAGER': 2, 'ASSOCIATE': 3 };
+            return list.sort((a, b) => (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3));
+        }
+
+        function openEditEmpModal(empId, e) {
+            if (e) e.stopPropagation();
+            const list = getCurrentStoreEmployees();
+            const emp = list.find(x => x.id === empId);
+            if (!emp) return;
+
+            editingEmployeeRoleContext = empId;
+            document.getElementById('edit-emp-name-input').value = emp.name;
+            document.getElementById('edit-emp-role-select').value = emp.role || 'ASSOCIATE';
+            document.getElementById('edit-emp-modal').classList.remove('hidden');
+        }
+
+        function closeEditEmpModal() {
+            document.getElementById('edit-emp-modal').classList.add('hidden');
+            editingEmployeeRoleContext = null;
+        }
+
+        function saveEmployeeRole() {
+            if (!editingEmployeeRoleContext) return;
+            const list = getCurrentStoreEmployees();
+            const emp = list.find(x => x.id === editingEmployeeRoleContext);
+            if (emp) {
+                emp.name = document.getElementById('edit-emp-name-input').value.trim().toUpperCase();
+                emp.role = document.getElementById('edit-emp-role-select').value;
+                saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
+                renderEmployeeSidebar();
+                renderMatrix();
+            }
+            closeEditEmpModal();
+        }
+
+        function toggleAddEmpForm() {
+            const form = document.getElementById('add-emp-form');
+            form.classList.toggle('hidden');
+        }
+
+        function addNewEmployee() {
+            const nameInput = document.getElementById('new-emp-name');
+            const idInput = document.getElementById('new-emp-id');
+            const roleInput = document.getElementById('new-emp-role');
+
+            const name = nameInput.value.trim().toUpperCase();
+            const id = idInput.value.trim();
+            const role = roleInput.value;
+
+            if (!name || !id) {
+                alert("Lütfen Mağaza Çalışanının Ad Soyad ve Personel ID bilgilerini eksiksiz girin.");
+                return;
+            }
+
+            const currentList = getCurrentStoreEmployees();
+
+            if (currentList.some(e => e.id === id)) {
+                alert("Bu Personel ID zaten bu mağazada mevcut!");
+                return;
+            }
+
+            currentList.push({ id, name, role });
+            saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
+
+            nameInput.value = '';
+            idInput.value = '';
+            toggleAddEmpForm();
+            renderEmployeeSidebar();
+            renderMatrix();
+        }
+
+        function deleteEmployee(empId, e) {
+            e.stopPropagation();
+            if (confirm("Bu çalışanı rehberden silmek istediğinize emin misiniz?")) {
+                storeEmployeesDB[currentGlobalPointId] = getCurrentStoreEmployees().filter(emp => emp.id !== empId);
+                shifts = shifts.filter(s => s.employee_id !== empId);
+                
+                saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
+                saveToStorage('ys_shifts', shifts);
+
+                renderEmployeeSidebar();
+                renderMatrix();
+            }
+        }
+
+        function deleteSingleEmployeeShifts(empId, e) {
+            if (e) e.stopPropagation();
+            shifts = shifts.filter(s => s.employee_id !== empId);
+            saveToStorage('ys_shifts', shifts);
+
+            renderEmployeeSidebar();
+            renderMatrix();
+        }
+
+        function renderEmployeeSidebar(listToRender = null) {
+            const activeList = listToRender || getCurrentStoreEmployees();
+            employeeListContainer.innerHTML = '';
+            employeeCountBadge.textContent = `${activeList.length} Kişi`;
+            
+            const assignedEmpIds = new Set(shifts.map(s => s.employee_id).filter(Boolean));
+
+            if (activeList.length === 0) {
+                employeeListContainer.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 text-xs border border-dashed border-slate-200 rounded-2xl">
+                        <i class="fa-solid fa-users text-2xl text-slate-300 mb-1.5 block"></i>
+                        Bu mağazada henüz ekli personel yok.
+                    </div>
+                `;
+                return;
+            }
+
+            activeList.forEach(emp => {
+                const isAssigned = assignedEmpIds.has(emp.id);
+                const role = emp.role || 'ASSOCIATE';
+                const item = document.createElement('div');
+                
+                if (isAssigned) {
+                    item.className = 'p-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/80 transition flex items-center justify-between group cursor-pointer shadow-sm';
+                } else {
+                    item.className = 'p-3 rounded-2xl border border-slate-200/80 hover:border-ys-pink/40 hover:bg-ys-pinkLight/30 transition flex items-center justify-between group cursor-pointer';
+                }
+
+                let roleBadge = '<span class="bg-slate-100 text-slate-600 border border-slate-200 text-[9px] px-1.5 py-0.5 rounded font-bold">Görevli</span>';
+                if (role === 'MANAGER') {
+                    roleBadge = '<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-black flex items-center gap-0.5"><i class="fa-solid fa-crown text-[8px]"></i> MÜDÜR</span>';
+                } else if (role === 'ASSISTANT_MANAGER') {
+                    roleBadge = '<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] px-1.5 py-0.5 rounded font-black flex items-center gap-0.5"><i class="fa-solid fa-star text-[8px]"></i> MÜDÜR YRD.</span>';
+                }
+
+                item.onclick = () => openWeeklyModal(emp);
+                item.innerHTML = `
+                    <div class="flex-1 pr-2">
+                        <div class="font-bold text-xs ${isAssigned ? 'text-emerald-950' : 'text-slate-800'} flex items-center gap-1.5">
+                            ${isAssigned ? '<i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>' : ''}
+                            <span class="truncate">${emp.name}</span>
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-[11px] font-mono ${isAssigned ? 'text-emerald-700' : 'text-ys-pink'} font-bold">ID: ${emp.id}</span>
+                            ${roleBadge}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1">
+                        <button onclick="openEditEmpModal('${emp.id}', event)" class="w-7 h-7 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition border border-slate-300" title="Pozisyon Düzenle">
+                            <i class="fa-solid fa-pencil text-[10px]"></i>
+                        </button>
+
+                        <button class="text-[10px] ${isAssigned ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-ys-pink text-white hover:bg-ys-pinkHover'} px-2.5 py-1.5 rounded-xl font-bold shadow-sm transition flex items-center gap-1">
+                            <i class="fa-solid ${isAssigned ? 'fa-check' : 'fa-calendar-plus'}"></i>
+                            <span>${isAssigned ? 'Girildi' : 'Plan'}</span>
+                        </button>
+
+                        ${isAssigned ? `
+                            <button onclick="deleteSingleEmployeeShifts('${emp.id}', event)" class="w-7 h-7 rounded-xl text-rose-500 hover:text-rose-700 hover:bg-rose-100 flex items-center justify-center transition border border-rose-200">
+                                <i class="fa-regular fa-trash-can text-xs"></i>
+                            </button>
+                        ` : `
+                            <button onclick="deleteEmployee('${emp.id}', event)" class="w-7 h-7 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        `}
+                    </div>
+                `;
+                employeeListContainer.appendChild(item);
+            });
+        }
+
+        function filterEmployees(query) {
+            const q = query.toLowerCase();
+            const currentList = getCurrentStoreEmployees();
+            const filtered = currentList.filter(e => e.name.toLowerCase().includes(q) || e.id.includes(q));
+            renderEmployeeSidebar(filtered);
+        }
+
+        function calculateEndDate(startDateStr, startTimeStr, endTimeStr) {
+            if (!startDateStr || !startTimeStr || !endTimeStr) return startDateStr;
+            if (endTimeStr === '00:00' || endTimeStr <= startTimeStr) {
+                let d = new Date(startDateStr);
+                d.setDate(d.getDate() + 1);
+                return d.toISOString().split('T')[0];
+            }
+            return startDateStr;
+        }
+
+        function getIconicCellBadge(empId, targetDate, startTime, endTime, leaveType = 'WORK') {
+            if (leaveType === 'YILLIK_IZIN') {
+                return `<div class="bg-teal-600 text-white font-black text-xs h-full w-full flex items-center justify-center min-h-[44px] gap-1 shadow-inner">
+                    <i class="fa-solid fa-umbrella-beach text-teal-200"></i>
+                    <span>YILLIK İZİN</span>
+                </div>`;
+            }
+            if (leaveType === 'RAPOR') {
+                return `<div class="bg-rose-600 text-white font-black text-xs h-full w-full flex items-center justify-center min-h-[44px] gap-1 shadow-inner">
+                    <i class="fa-solid fa-notes-medical text-rose-200"></i>
+                    <span>RAPOR</span>
+                </div>`;
+            }
+            if (leaveType === 'OFIS_DESTEK') {
+                return `<div class="bg-purple-700 text-white font-black text-xs h-full w-full flex items-center justify-center min-h-[44px] gap-1 shadow-inner">
+                    <i class="fa-solid fa-briefcase text-purple-200"></i>
+                    <span>OFİS (${startTime}/${endTime})</span>
+                </div>`;
+            }
+            if (leaveType === 'OFF' || !startTime || !endTime) {
+                if (copiedSingleDayShift) {
+                    return `<div onclick="pasteSingleDayToCell('${empId}', '${targetDate}', event)" class="bg-purple-600 hover:bg-purple-700 text-white font-black text-xs h-full w-full flex items-center justify-center min-h-[44px] cursor-pointer">
+                        <i class="fa-solid fa-paste mr-1"></i> Yapıştır
+                    </div>`;
+                }
+                return `<div class="bg-[#FF0000] text-white font-black text-xs h-full w-full flex items-center justify-center min-h-[44px] tracking-wider">OFF</div>`;
+            }
+
+            const startH = parseInt(startTime.split(':')[0], 10);
+            
+            let colorClasses = 'bg-sky-500 text-white';
+            let iconClass = 'fa-sun text-amber-200';
+
+            if (startH >= 18 || startH < 6) {
+                colorClasses = 'bg-gradient-to-br from-indigo-700 via-purple-800 to-slate-900 text-white shadow-sm';
+                iconClass = 'fa-moon text-sky-200 animate-pulse';
+            } else if (startH >= 10 && startH < 15) {
+                colorClasses = 'bg-gradient-to-br from-amber-500 to-orange-600 text-white';
+                iconClass = 'fa-cloud-sun text-amber-100';
+            }
+
+            let timeFormatted = `${startTime}/${endTime}`;
+
+            return `
+                <div class="${colorClasses} text-xs font-black h-full w-full flex items-center justify-center min-h-[44px] gap-1.5 relative group/cell">
+                    <button onclick="copySingleDayFromCell('${startTime}', '${endTime}', '${leaveType}', event)" class="absolute top-0.5 right-1 text-[9px] text-white opacity-0 group-hover/cell:opacity-100 hover:text-amber-300 transition" title="Kopyala">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                    <i class="fa-solid ${iconClass} text-[11px]"></i>
+                    <span>${timeFormatted}</span>
+                </div>
+            `;
+        }
+
+        function renderMatrix() {
+            matrixTableBody.innerHTML = '';
+            const activeEmployees = getCurrentStoreEmployees();
+
+            if (activeEmployees.length === 0) {
+                matrixTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="p-8 text-center text-slate-400 text-xs">
+                            Bu mağazada gösterilecek aktif personel bulunmamaktadır.
+                        </td>
+                    </tr>
+                `;
+                matrixCountsHeader.innerHTML = `
+                    <td class="p-2 text-left font-bold text-slate-500 border border-slate-300">Vardiya Başı Görevli Sayısı:</td>
+                    <td colspan="8" class="p-2 text-slate-400">Veri yok</td>
+                `;
+                return;
+            }
+
+            let dailyCounts = Array(7).fill(null).map(() => ({ morning: 0, midday: 0, night: 0, off: 0 }));
+
+            const startDateInput = document.getElementById('weekly-start-date');
+            const startDateStr = startDateInput ? startDateInput.value : '2026-10-05';
+            let baseDate = new Date(startDateStr);
+            let weekDates = [];
+
+            for (let i = 0; i < 7; i++) {
+                let d = new Date(baseDate);
+                d.setDate(baseDate.getDate() + i);
+                let formatted = d.toISOString().split('T')[0];
+                weekDates.push(formatted);
+
+                const th = document.getElementById(`th-date-${i}`);
+                if (th) {
+                    const [y, m, day] = formatted.split('-');
+                    th.textContent = `${day}/${m}/${y}`;
+                }
+            }
+
+            activeEmployees.forEach((emp, empIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-300 min-h-[44px]';
+
+                const empShifts = shifts.filter(s => s.employee_id === emp.id);
+
+                let daysHtml = '';
+                let totalWeeklyOT = 0;
+                let totalWeeklyNetWork = 0;
+
+                for (let i = 0; i < 7; i++) {
+                    const targetDate = weekDates[i];
+                    let cellShift = empShifts.find(s => s.start_date === targetDate);
+                    if (!cellShift && empShifts[i] && empShifts.length === 7) {
+                        cellShift = empShifts[i];
+                    }
+
+                    if (cellShift) {
+                        const lType = cellShift.leave_type || 'WORK';
+                        const { netWorkHours, otHours } = calculateShiftStats(cellShift.start_time, cellShift.end_time, lType);
+                        totalWeeklyNetWork += netWorkHours;
+                        totalWeeklyOT += otHours;
+
+                        if (lType === 'WORK' || lType === 'OFIS_DESTEK') {
+                            const stH = parseInt(cellShift.start_time.split(':')[0], 10);
+                            if (stH >= 18 || stH < 6) dailyCounts[i].night++;
+                            else if (stH >= 10 && stH < 15) dailyCounts[i].midday++;
+                            else dailyCounts[i].morning++;
+                        } else {
+                            dailyCounts[i].off++;
+                        }
+
+                        daysHtml += `
+                            <td onclick="openSingleDayModal('${emp.id}', ${i}, '${targetDate}', '${dayNames[i]}')" class="p-0 border border-slate-300 align-middle cursor-pointer" title="${emp.name} - ${dayNames[i]}">
+                                ${getIconicCellBadge(emp.id, targetDate, cellShift.start_time, cellShift.end_time, lType)}
+                            </td>`;
+                    } else {
+                        dailyCounts[i].off++;
+                        daysHtml += `
+                            <td onclick="openSingleDayModal('${emp.id}', ${i}, '${targetDate}', '${dayNames[i]}')" class="p-0 border border-slate-300 align-middle cursor-pointer" title="${emp.name} - ${dayNames[i]}">
+                                ${getIconicCellBadge(emp.id, targetDate, '', '', 'OFF')}
+                            </td>`;
+                    }
+                }
+
+                const role = emp.role || 'ASSOCIATE';
+                let roleBadge = '<span class="bg-slate-200 text-slate-800 text-[9px] px-1.5 py-0.5 rounded font-bold">Görevli</span>';
+                if (role === 'MANAGER') {
+                    roleBadge = '<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-black">MÜDÜR</span>';
+                } else if (role === 'ASSISTANT_MANAGER') {
+                    roleBadge = '<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] px-1.5 py-0.5 rounded font-black">MÜDÜR YRD.</span>';
+                }
+
+                tr.innerHTML = `
+                    <td onclick="openWeeklyModalForEmp('${emp.id}')" class="p-2.5 text-left border-r-2 border-slate-400 bg-white align-middle cursor-pointer hover:bg-slate-100 transition group" title="${emp.name} - Haftalık Planı Aç">
+                        <div class="font-extrabold text-slate-950 text-xs uppercase tracking-tight group-hover:text-ys-pink transition">${emp.name}</div>
+                        <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                            <span class="text-[10px] text-ys-pink font-mono font-bold">ID: ${emp.id}</span>
+                            ${roleBadge}
+                            <span class="text-[9px] bg-slate-100 text-slate-700 px-1 rounded font-extrabold">Net: ${totalWeeklyNetWork.toFixed(1)}s</span>
+                            ${totalWeeklyOT > 0 ? `<span class="text-[9px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-1 rounded">+${totalWeeklyOT.toFixed(1)}s FM</span>` : ''}
+                        </div>
+                    </td>
+                    ${daysHtml}
+                    <!-- HAFTALIK TEK İMZA ALANI -->
+                    <td class="p-1 border border-slate-300 bg-white align-middle text-center font-mono text-[10px] text-slate-300 font-bold w-32">
+                        ...................
+                    </td>
+                `;
+                matrixTableBody.appendChild(tr);
+            });
+
+            let countsHeaderHtml = `<td class="p-2 text-left font-extrabold text-slate-800 border-r-2 border-slate-400 bg-amber-100 align-middle">
+                <div class="text-xs font-black">Vardiya Dağılımı</div>
+            </td>`;
+
+            for (let i = 0; i < 7; i++) {
+                const c = dailyCounts[i];
+                countsHeaderHtml += `
+                    <td class="p-1 border border-slate-300 text-[10px] font-bold align-middle bg-amber-50">
+                        <div class="flex justify-center gap-1 font-extrabold">
+                            <span class="text-sky-700" title="Sabah">S:${c.morning}</span>
+                            <span class="text-amber-800" title="Öğlen">Ö:${c.midday}</span>
+                            <span class="text-indigo-900" title="Gece">G:${c.night}</span>
+                            <span class="text-rose-700" title="OFF">OFF:${c.off}</span>
+                        </div>
+                    </td>
+                `;
+            }
+            countsHeaderHtml += `<td class="p-1 border border-slate-300 bg-amber-100 align-middle font-black text-[10px] text-amber-900">ÇALIŞAN ONAYI</td>`;
+            matrixCountsHeader.innerHTML = countsHeaderHtml;
+        }
+
+        function openSingleDayModal(empId, dayIndex, targetDate, dayName) {
+            const allEmp = getCurrentStoreEmployees();
+            const targetEmp = allEmp.find(e => e.id === empId);
+            if (!targetEmp) return;
+
+            activeSingleDayContext = { empId, dayIndex, targetDate, dayName };
+
+            document.getElementById('single-modal-employee-name').textContent = targetEmp.name;
+            document.getElementById('single-modal-day-info').textContent = `${dayName} - ${targetDate}`;
+
+            const leaveSelect = document.getElementById('single-leave-select');
+            leaveSelect.innerHTML = '';
+
+            const existingShift = shifts.find(s => s.employee_id === empId && s.start_date === targetDate);
+            const currentLeave = existingShift ? (existingShift.leave_type || 'WORK') : 'OFF';
+            const currentStart = existingShift ? existingShift.start_time : '09:00';
+            const currentEnd = existingShift ? existingShift.end_time : '17:00';
+
+            leaveTypesList.forEach(lt => {
+                const sel = lt.code === currentLeave ? 'selected' : '';
+                leaveSelect.innerHTML += `<option value="${lt.code}" ${sel}>${lt.label}</option>`;
+            });
+
+            document.getElementById('single-start-time').value = currentStart;
+            document.getElementById('single-end-time').value = currentEnd;
+
+            toggleSingleLeaveType(currentLeave);
+
+            const pasteBtn = document.getElementById('single-modal-paste-btn');
+            if (copiedSingleDayShift) {
+                pasteBtn.classList.remove('hidden');
+            } else {
+                pasteBtn.classList.add('hidden');
+            }
+
+            document.getElementById('single-day-modal').classList.remove('hidden');
+        }
+
+        function pasteToSingleDayFromModal() {
+            if (!activeSingleDayContext || !copiedSingleDayShift) return;
+
+            document.getElementById('single-leave-select').value = copiedSingleDayShift.leaveType;
+            toggleSingleLeaveType(copiedSingleDayShift.leaveType);
+
+            if (copiedSingleDayShift.leaveType === 'WORK' || copiedSingleDayShift.leaveType === 'OFIS_DESTEK') {
+                document.getElementById('single-start-time').value = copiedSingleDayShift.startTime;
+                document.getElementById('single-end-time').value = copiedSingleDayShift.endTime;
+            }
+
+            saveSingleDayShift();
+        }
+
+        function closeSingleDayModal() {
+            document.getElementById('single-day-modal').classList.add('hidden');
+            activeSingleDayContext = null;
+        }
+
+        function toggleSingleLeaveType(code) {
+            const container = document.getElementById('single-custom-time-container');
+            if (code !== 'WORK' && code !== 'OFIS_DESTEK') {
+                container.classList.add('opacity-30', 'pointer-events-none');
+            } else {
+                container.classList.remove('opacity-30', 'pointer-events-none');
+            }
+        }
+
+        function saveSingleDayShift() {
+            if (!activeSingleDayContext) return;
+
+            const { empId, targetDate } = activeSingleDayContext;
+            const leaveType = document.getElementById('single-leave-select').value;
+            const startTime = document.getElementById('single-start-time').value;
+            const endTime = document.getElementById('single-end-time').value;
+
+            shifts = shifts.filter(s => !(s.employee_id === empId && s.start_date === targetDate));
+
+            if (leaveType !== 'OFF') {
+                let endDateFormatted = calculateEndDate(targetDate, startTime, endTime);
+
+                shifts.push({
+                    shift_id: '',
+                    adjustment_type: 'CREATE',
+                    employee_id: empId,
+                    starting_point_id: currentGlobalPointId,
+                    start_date: targetDate,
+                    end_date: endDateFormatted,
+                    start_time: (leaveType === 'WORK' || leaveType === 'OFIS_DESTEK') ? startTime : '00:00',
+                    end_time: (leaveType === 'WORK' || leaveType === 'OFIS_DESTEK') ? endTime : '00:00',
+                    leave_type: leaveType
+                });
+            }
+
+            saveToStorage('ys_shifts', shifts);
+
+            renderEmployeeSidebar();
+            renderMatrix();
+            closeSingleDayModal();
+        }
+
+        function openWeeklyModalForEmp(empId) {
+            const allEmp = getCurrentStoreEmployees();
+            const targetEmp = allEmp.find(e => e.id === empId);
+            if (targetEmp) {
+                openWeeklyModal(targetEmp);
+            }
+        }
+
+        function openWeeklyModal(emp) {
+            selectedEmpForModal = emp;
+            document.getElementById('modal-employee-name').textContent = emp.name;
+            document.getElementById('modal-employee-id').textContent = `Personel ID: ${emp.id}`;
+            
+            const badge = document.getElementById('modal-employee-role-badge');
+            if (emp.role === 'MANAGER') {
+                badge.className = "px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-indigo-100 text-indigo-800 border border-indigo-300";
+                badge.textContent = "Mağaza Müdürü";
+            } else if (emp.role === 'ASSISTANT_MANAGER') {
+                badge.className = "px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-100 text-amber-900 border border-amber-300";
+                badge.textContent = "Müdür Yardımcısı";
+            } else {
+                badge.className = "px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-slate-100 text-slate-700 border border-slate-200";
+                badge.textContent = "Mağaza Görevlisi";
+            }
+
+            document.getElementById('weekly-modal').classList.remove('hidden');
+            updateModalDates();
+        }
+
+        function closeWeeklyModal() {
+            document.getElementById('weekly-modal').classList.add('hidden');
+        }
+
+        function updateModalDates() {
+            const startDateStr = document.getElementById('weekly-start-date').value;
+            const container = document.getElementById('days-container');
+            container.innerHTML = '';
+
+            let baseDate = new Date(startDateStr);
+            const existingEmpShifts = shifts.filter(s => s.employee_id === selectedEmpForModal.id);
+
+            for (let i = 0; i < 7; i++) {
+                let currDate = new Date(baseDate);
+                currDate.setDate(baseDate.getDate() + i);
+                let formattedDateStr = currDate.toISOString().split('T')[0];
+
+                let existing = existingEmpShifts.find(s => s.start_date === formattedDateStr);
+                if (!existing && existingEmpShifts.length === 7) {
+                    existing = existingEmpShifts[i];
+                }
+
+                let currentLeaveCode = existing ? (existing.leave_type || 'WORK') : 'WORK';
+                let currentStartTime = existing ? existing.start_time : '00:00';
+                let currentEndTime = existing ? existing.end_time : '00:00';
+
+                let leaveTypeOptions = '';
+                leaveTypesList.forEach(lt => {
+                    const sel = lt.code === currentLeaveCode ? 'selected' : '';
+                    leaveTypeOptions += `<option value="${lt.code}" ${sel}>${lt.label}</option>`;
+                });
+
+                const dayRow = document.createElement('div');
+                dayRow.className = 'p-3 bg-slate-50/80 rounded-2xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs';
+                dayRow.innerHTML = `
+                    <div class="w-28 font-bold text-slate-800">
+                        <div>${dayNames[i]}</div>
+                        <div class="text-[10px] font-normal text-slate-400 font-mono">${formattedDateStr}</div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-500 font-bold">Durum:</span>
+                        <select id="leave-select-${i}" onchange="toggleLeaveType(${i}, this.value)" class="ys-input font-bold text-xs bg-white text-slate-800 border-slate-300 shadow-sm w-56">
+                            ${leaveTypeOptions}
+                        </select>
+                    </div>
+                    
+                    <div id="custom-time-container-${i}" class="flex items-center gap-1.5 ${currentLeaveCode !== 'WORK' && currentLeaveCode !== 'OFIS_DESTEK' ? 'opacity-30 pointer-events-none' : ''}">
+                        <input type="time" id="start-time-${i}" value="${currentStartTime}" class="ys-input w-22 text-center font-bold text-xs shadow-sm">
+                        <span class="text-slate-400 font-bold">-</span>
+                        <input type="time" id="end-time-${i}" value="${currentEndTime}" class="ys-input w-22 text-center font-bold text-xs shadow-sm">
+                    </div>
+                `;
+                container.appendChild(dayRow);
+            }
+        }
+
+        function applyBulkTimeToAllDays() {
+            const st = document.getElementById('bulk-start-time').value;
+            const et = document.getElementById('bulk-end-time').value;
+
+            if (!st || !et) {
+                alert("Lütfen toplu uygulanacak başlangıç ve bitiş saatlerini girin.");
+                return;
+            }
+
+            for (let i = 0; i < 7; i++) {
+                const leaveSelect = document.getElementById(`leave-select-${i}`);
+                if (leaveSelect) {
+                    leaveSelect.value = 'WORK';
+                    toggleLeaveType(i, 'WORK');
+                }
+                const startInput = document.getElementById(`start-time-${i}`);
+                const endInput = document.getElementById(`end-time-${i}`);
+                if (startInput) startInput.value = st;
+                if (endInput) endInput.value = et;
+            }
+        }
+
+        function toggleLeaveType(dayIdx, code) {
+            const container = document.getElementById(`custom-time-container-${dayIdx}`);
+            if (code !== 'WORK' && code !== 'OFIS_DESTEK') {
+                container.classList.add('opacity-30', 'pointer-events-none');
+            } else {
+                container.classList.remove('opacity-30', 'pointer-events-none');
+            }
+        }
+
+        function submitWeeklyShifts() {
+            if (!selectedEmpForModal) return;
+
+            shifts = shifts.filter(s => s.employee_id !== selectedEmpForModal.id);
+
+            const startDateStr = document.getElementById('weekly-start-date').value;
+            let baseDate = new Date(startDateStr);
+
+            for (let i = 0; i < 7; i++) {
+                let currDate = new Date(baseDate);
+                currDate.setDate(baseDate.getDate() + i);
+                let startDateFormatted = currDate.toISOString().split('T')[0];
+
+                const leaveType = document.getElementById(`leave-select-${i}`).value;
+                if (leaveType === 'OFF') continue;
+
+                let startTime = '00:00';
+                let endTime = '00:00';
+
+                if (leaveType === 'WORK' || leaveType === 'OFIS_DESTEK') {
+                    startTime = document.getElementById(`start-time-${i}`).value;
+                    endTime = document.getElementById(`end-time-${i}`).value;
+                }
+
+                if (!startTime || !endTime || (startTime === '00:00' && endTime === '00:00')) continue;
+
+                let endDateFormatted = calculateEndDate(startDateFormatted, startTime, endTime);
+
+                shifts.push({
+                    shift_id: '',
+                    adjustment_type: 'CREATE',
+                    employee_id: selectedEmpForModal.id,
+                    starting_point_id: currentGlobalPointId,
+                    start_date: startDateFormatted,
+                    end_date: endDateFormatted,
+                    start_time: startTime,
+                    end_time: endTime,
+                    leave_type: leaveType
+                });
+            }
+
+            saveToStorage('ys_shifts', shifts);
+
+            renderEmployeeSidebar();
+            renderMatrix();
+            closeWeeklyModal();
+        }
+
+        function clearAllShifts() {
+            if (confirm("Tüm vardiya listesi temizlensin mi?")) {
+                shifts = [];
+                saveToStorage('ys_shifts', shifts);
+
+                renderEmployeeSidebar();
+                renderMatrix();
+            }
+        }
+
+        function generateCSVContent() {
+            const header = 'shift_id,adjustment_type,employee_id,starting_point_id,start_date,end_date,start_time (local),end_time (local),shift_slots';
+            
+            const validShifts = shifts.filter(s => !(s.start_time === '00:00' && s.end_time === '00:00'));
+
+            const rows = validShifts.map(s => {
+                let endDate = calculateEndDate(s.start_date, s.start_time, s.end_time);
+                return `${s.shift_id || ''},${s.adjustment_type || 'CREATE'},${s.employee_id},${s.starting_point_id},${s.start_date},${endDate},${s.start_time},${s.end_time},`;
+            });
+
+            return [header, ...rows].join('\n');
+        }
+
+        function downloadCSV() {
+            if (shifts.length === 0) {
+                alert("İndirilecek herhangi bir vardiya bulunamadı. Lütfen önce vardiya giriniz.");
+                return;
+            }
+
+            const csvContent = generateCSVContent();
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `yemeksepeti_vardiya_${new Date().toISOString().split('T')[0]}.csv`;
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+
+        // CROP IMAGE DIRECTLY FROM THE YELLOW HEADER TABLE ELEMENT (matrix-card-container)
+        function downloadMatrixAsImage() {
+            const container = document.getElementById('matrix-card-container');
+            const storeSelect = document.getElementById('store-select');
+            const storeName = storeSelect.options[storeSelect.selectedIndex].text.split('(')[0].trim().replace(/[^a-zA-Z0-9_]/g, '_');
+            const today = new Date().toISOString().split('T')[0];
+
+            html2canvas(container, { 
+                scale: 3,
+                backgroundColor: '#ffffff',
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Yemeksepeti_Market_${storeName}_Vardiya_Cizelgesi_${today}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+            });
+        }
+
+        document.getElementById('clear-all-btn').addEventListener('click', clearAllShifts);
+
+        // INITIAL LOAD
+        document.getElementById('global-point-id').value = currentGlobalPointId;
+        renderEmployeeSidebar();
+        renderMatrix();
+    </script>
+</body>
+</html>
