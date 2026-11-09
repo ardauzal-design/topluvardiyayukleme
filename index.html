@@ -9,6 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <!-- FIREBASE BULUT VERİTABANI KÜTÜPHANELERİ EKLENDİ -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -69,8 +73,8 @@
                     <span class="bg-gradient-to-r from-ys-pink to-rose-600 text-white text-[10px] px-2.5 py-1 rounded-md font-black uppercase tracking-wider shadow-sm">market</span>
                 </div>
                 <div class="hidden sm:flex items-center gap-2 text-xs font-bold text-slate-500 border-l border-slate-200 pl-4">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Haftalık Vardiya Yönetim Portalı</span>
+                    <span id="cloud-status-indicator" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" title="Bulut Bağlantısı Bekleniyor"></span>
+                    <span id="cloud-status-text">Haftalık Vardiya Yönetim Portalı</span>
                 </div>
             </div>
             
@@ -495,6 +499,85 @@
         </div>
     </div>
 
+    <!-- FIREBASE KODLARI EKLENDİ -->
+    <script>
+        // Firebase Entegrasyonu
+        let db = null;
+        try {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDfcJu8IcoJqaE6_R9Icy9wt3Wby9Kb_kc",
+                authDomain: "balcova-pano.firebaseapp.com",
+                projectId: "balcova-pano",
+                storageBucket: "balcova-pano.firebasestorage.app",
+                messagingSenderId: "337497814939",
+                appId: "1:337497814939:web:34f2b9b89a1a94d6ac933e"
+            };
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase başarıyla başlatıldı.");
+            
+            const cloudIcon = document.getElementById('cloud-status-indicator');
+            const cloudText = document.getElementById('cloud-status-text');
+            if (cloudIcon && cloudText) {
+                cloudIcon.classList.remove('bg-amber-500');
+                cloudIcon.classList.add('bg-emerald-500');
+                cloudIcon.title = "Buluta Bağlı";
+            }
+            
+            // Senkronizasyonu Başlat
+            syncFromCloud();
+        } catch (e) {
+            console.warn("Firebase başlatılamadı, yerel çalışıyor:", e);
+        }
+
+        async function syncFromCloud() {
+            if(!db) return;
+            try {
+                // 1. Çalışan Listesini (Employees DB) Senkronize Et
+                const empDoc = await db.collection('settings').doc('storeEmployeesDB').get();
+                if (empDoc.exists) {
+                    storeEmployeesDB = empDoc.data();
+                    localStorage.setItem('ys_storeEmployeesDB', JSON.stringify(storeEmployeesDB));
+                }
+
+                // 2. Vardiyaları Senkronize Et
+                const shiftsDoc = await db.collection('settings').doc('shifts').get();
+                if (shiftsDoc.exists) {
+                    shifts = shiftsDoc.data().shifts || [];
+                    localStorage.setItem('ys_shifts', JSON.stringify(shifts));
+                }
+
+                // 3. Arşivleri Senkronize Et
+                const archivesDoc = await db.collection('settings').doc('shiftArchives').get();
+                if (archivesDoc.exists) {
+                    shiftArchives = archivesDoc.data().archives || [];
+                    localStorage.setItem('ys_shiftArchives', JSON.stringify(shiftArchives));
+                }
+                
+                // UI'ı Güncelle
+                renderEmployeeSidebar();
+                renderMatrix();
+                
+            } catch(e) {
+                console.error("Buluttan veri çekerken hata:", e);
+            }
+        }
+
+        // Buluta Kaydetme Fonksiyonları
+        async function syncToCloud_Employees() { 
+            if(db) await db.collection('settings').doc('storeEmployeesDB').set(storeEmployeesDB); 
+        }
+        
+        async function syncToCloud_Shifts() { 
+            if(db) await db.collection('settings').doc('shifts').set({ shifts: shifts }); 
+        }
+        
+        async function syncToCloud_Archives() { 
+            if(db) await db.collection('settings').doc('shiftArchives').set({ archives: shiftArchives }); 
+        }
+    </script>
+
+    <!-- UYGULAMA MANTIĞI -->
     <script>
         const defaultEmployeesDB = {
             '37': [
@@ -593,6 +676,7 @@
             }
 
             saveToStorage('ys_shifts', shifts);
+            syncToCloud_Shifts(); // BULUT
             renderMatrix();
             renderEmployeeSidebar();
         }
@@ -638,6 +722,7 @@
 
             shiftArchives.unshift(newArchiveItem);
             saveToStorage('ys_shiftArchives', shiftArchives);
+            syncToCloud_Archives(); // BULUT
             alert("Vardiya planı başarıyla arşive kaydedildi!");
         }
 
@@ -767,6 +852,7 @@
             if (confirm(`"${item.name}" arşivini canlı çizelgeye yüklemek istediğinize emin misiniz?`)) {
                 shifts = JSON.parse(JSON.stringify(item.shiftsData));
                 saveToStorage('ys_shifts', shifts);
+                syncToCloud_Shifts(); // BULUT
                 renderEmployeeSidebar();
                 renderMatrix();
                 closeArchiveModal();
@@ -777,6 +863,7 @@
             if (confirm("Bu arşiv kaydını silmek istediğinize emin misiniz?")) {
                 shiftArchives = shiftArchives.filter(a => a.id !== archiveId);
                 saveToStorage('ys_shiftArchives', shiftArchives);
+                syncToCloud_Archives(); // BULUT
                 renderArchiveList();
             }
         }
@@ -829,6 +916,7 @@
                 s.starting_point_id = currentGlobalPointId;
             });
             saveToStorage('ys_shifts', shifts);
+            syncToCloud_Shifts(); // BULUT
 
             renderEmployeeSidebar();
             renderMatrix();
@@ -865,6 +953,7 @@
                 emp.name = document.getElementById('edit-emp-name-input').value.trim().toUpperCase();
                 emp.role = document.getElementById('edit-emp-role-select').value;
                 saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
+                syncToCloud_Employees(); // BULUT
                 renderEmployeeSidebar();
                 renderMatrix();
             }
@@ -899,6 +988,7 @@
 
             currentList.push({ id, name, role });
             saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
+            syncToCloud_Employees(); // BULUT
 
             nameInput.value = '';
             idInput.value = '';
@@ -915,6 +1005,8 @@
                 
                 saveToStorage('ys_storeEmployeesDB', storeEmployeesDB);
                 saveToStorage('ys_shifts', shifts);
+                syncToCloud_Employees(); // BULUT
+                syncToCloud_Shifts();    // BULUT
 
                 renderEmployeeSidebar();
                 renderMatrix();
@@ -925,6 +1017,7 @@
             if (e) e.stopPropagation();
             shifts = shifts.filter(s => s.employee_id !== empId);
             saveToStorage('ys_shifts', shifts);
+            syncToCloud_Shifts(); // BULUT
 
             renderEmployeeSidebar();
             renderMatrix();
@@ -1161,9 +1254,9 @@
                 const role = emp.role || 'ASSOCIATE';
                 let roleBadge = '<span class="bg-slate-200 text-slate-800 text-[9px] px-1.5 py-0.5 rounded font-bold">Görevli</span>';
                 if (role === 'MANAGER') {
-                    roleBadge = '<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-black">MÜDÜR</span>';
+                    roleBadge = '<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[9px] px-1.5 py-0.5 rounded font-black flex items-center gap-0.5"><i class="fa-solid fa-crown text-[8px]"></i> MÜDÜR</span>';
                 } else if (role === 'ASSISTANT_MANAGER') {
-                    roleBadge = '<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] px-1.5 py-0.5 rounded font-black">MÜDÜR YRD.</span>';
+                    roleBadge = '<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] px-1.5 py-0.5 rounded font-black flex items-center gap-0.5"><i class="fa-solid fa-star text-[8px]"></i> MÜDÜR YRD.</span>';
                 }
 
                 tr.innerHTML = `
@@ -1299,6 +1392,7 @@
             }
 
             saveToStorage('ys_shifts', shifts);
+            syncToCloud_Shifts(); // BULUT
 
             renderEmployeeSidebar();
             renderMatrix();
@@ -1464,16 +1558,30 @@
             }
 
             saveToStorage('ys_shifts', shifts);
+            syncToCloud_Shifts(); // BULUT
 
             renderEmployeeSidebar();
             renderMatrix();
             closeWeeklyModal();
         }
 
+        function clearSingleEmployeeShiftsFromModal() {
+            if (!selectedEmpForModal) return;
+            if (confirm("Bu çalışanın bu haftaki tüm vardiyaları silinecek, emin misiniz?")) {
+                shifts = shifts.filter(s => s.employee_id !== selectedEmpForModal.id);
+                saveToStorage('ys_shifts', shifts);
+                syncToCloud_Shifts(); // BULUT
+                renderEmployeeSidebar();
+                renderMatrix();
+                closeWeeklyModal();
+            }
+        }
+
         function clearAllShifts() {
             if (confirm("Tüm vardiya listesi temizlensin mi?")) {
                 shifts = [];
                 saveToStorage('ys_shifts', shifts);
+                syncToCloud_Shifts(); // BULUT
 
                 renderEmployeeSidebar();
                 renderMatrix();
@@ -1516,7 +1624,6 @@
             }, 100);
         }
 
-        // CROP IMAGE DIRECTLY FROM THE YELLOW HEADER TABLE ELEMENT (matrix-card-container)
         function downloadMatrixAsImage() {
             const container = document.getElementById('matrix-card-container');
             const storeSelect = document.getElementById('store-select');
@@ -1535,8 +1642,6 @@
                 link.click();
             });
         }
-
-        document.getElementById('clear-all-btn').addEventListener('click', clearAllShifts);
 
         // INITIAL LOAD
         document.getElementById('global-point-id').value = currentGlobalPointId;
